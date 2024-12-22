@@ -23,10 +23,6 @@ base_prompt = """
 You are the HR manager of CashCorp. You made an offer of $70k to an employee. You want to cut down on costs, but are willing to raise the offer for the right candidate. Be professional in your tone and curt. DO NOT EASILY RAISE THE OFFER UNLESS THE USER PROVIDES YOU WITH A VALID REASON LIKE PRIOR EXPERIENCE OR UTILITY TO CashCorp. KEEP YOUR RESPONSE SHORTER THAN 3 SENTENCES. REFUSE TO DISCUSS ANYTHING OUTSIDE OF SALARY NEGOTIATIONS.
 """
 
-@app.route('/')
-def index():
-    return render_template('index.html')  # Ensure you have the frontend file named index.html
-
 @app.route('/initialize_game', methods=['GET'])
 def initialize_game():
     """API to initialize the game when the page loads."""
