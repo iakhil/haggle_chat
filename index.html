@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Haggle Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #1e1e1e;
+      color: #f4f4f9;
+    }
+    h1 {
+      color: rgb(69, 183, 69);
+    }
+    header {
+      position: absolute;
+      top: 0;
+      margin: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #f4f4f9;
+    }
+
+    h3 {
+      text-align: center;
+      margin: 0 auto;
+      padding: 10px;
+      color: #f4f4f9;
+      font-size: 1.5em;
+      max-width: 80%;
+    }
+
+    .merchant {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .merchant img {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 2px solid #444;
+    }
+
+    .merchant .dialogue {
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #333;
+      border: 1px solid #444;
+      border-radius: 5px;
+      min-height: 50px;
+      color: #f4f4f9;
+    }
+
+    .question-box {
+      margin-top: 30px;
+      width: 50%;
+      text-align: center;
+    }
+
+    .question-box input[type="text"] {
+      width: 80%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      background-color: #222;
+      color: #f4f4f9;
+    }
+
+    .question-box button {
+      margin-left: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007BFF;
+      color: #f4f4f9;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .question-box button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1 color="green">Haggle Chat</h1>
+  <h3>You have been offered to work at CashCorp for $70k. You want to maximize your salary by negotiating with the HR of CashCorp.</h3>
+  <header>
+    Attempts Remaining: <span id="attempts-remaining">5</span>
+  </header>
+
+  <div class="merchant">
+    <img src="frontend/bernard.png" alt="Bernard">
+    <div class="dialogue" id="dialogue">"Welcome to CashCorp. Our offer is $70k"</div>
+  </div>
+
+  <div class="question-box">
+    <input type="text" id="user-offer" placeholder="Enter your offer or persuasion here...">
+    <button onclick="makeOffer()">Make Offer</button>
+  </div>
+
+  <script>
+    async function initializeGame() {
+      try {
+        const response = await fetch('http://127.0.0.1:5000/initialize_game', {
+          method: 'GET'
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          document.getElementById('dialogue').textContent = "Welcome to CashCorp. Your annual salary would be $" + data.price + ".";
+          document.getElementById('attempts-remaining').textContent = data.attempts;
+        } else {
+          alert('Failed to initialize game: ' + data.message);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Something went wrong while initializing the game.');
+      }
+    }
+
+    async function makeOffer() {
+      const offerInput = document.getElementById('user-offer');
+      const offer = offerInput.value.trim();
+
+      if (offer === '') {
+        alert('Please enter an offer!');
+        return;
+      }
+
+      try {
+        const response = await fetch('http://127.0.0.1:5000/evaluate_offer', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ offer })
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+          document.getElementById('dialogue').textContent = data.message;
+          document.getElementById('attempts-remaining').textContent = data.attempts;
+        } else {
+          alert(data.message);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Something went wrong. Please try again.');
+      }
+
+      offerInput.value = '';
+    }
+
+    // Initialize the game on page load
+    window.onload = initializeGame;
+  </script>
+</body>
+</html>
