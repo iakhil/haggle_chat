@@ -17,13 +17,10 @@ client = OpenAI(
 initial_price = 70000
 price = initial_price
 attempts = 5
-last_offer = None  # To store the latest AI-generated offer
+last_offer = initial_price  # To store the latest AI-generated offer
 
 base_prompt = """
-
-You are the HR manager of CashCorp. You made an offer of $70k to an employee. You want to cut down on costs, but are willing to raise the offer for the right candidate. Be professional in your tone and curt. DO NOT EASILY RAISE THE OFFER UNLESS THE USER PROVIDES YOU WITH A VALID REASON LIKE 
-PRIOR EXPERIENCE OR UTILITY TO CashCorp. KEEP YOUR RESPONSE SHORTER THAN 3 SENTENCES. REFUSE TO DISCUSS ANYTHING OUTSIDE OF SALARY NEGOTIATIONS.
-
+You are the HR manager of CashCorp. You made an offer of $70k to an employee. You want to cut down on costs, but are willing to raise the offer for the right candidate. Be professional in your tone and curt. DO NOT EASILY RAISE THE OFFER UNLESS THE USER PROVIDES YOU WITH A VALID REASON LIKE PRIOR EXPERIENCE OR UTILITY TO CashCorp. KEEP YOUR RESPONSE SHORTER THAN 3 SENTENCES. REFUSE TO DISCUSS ANYTHING OUTSIDE OF SALARY NEGOTIATIONS.
 """
 
 @app.route('/')
@@ -36,7 +33,7 @@ def initialize_game():
     global price, attempts, last_offer
     price = initial_price
     attempts = 5
-    last_offer = None
+    last_offer = initial_price  # Initialize last_offer with the initial price
     return jsonify({
         "status": "success",
         "message": "Game initialized.",
@@ -52,8 +49,8 @@ def evaluate_offer():
     if attempts <= 0:
         return jsonify({
             "status": "fail",
-            "message": "No more attempts left!. Your final offer is $" + last_offer,
-            "price": price,
+            "message": f"No more attempts left! Your final offer is ${last_offer}.",
+            "price": last_offer,
             "attempts": attempts
         })
 
@@ -72,7 +69,7 @@ def evaluate_offer():
     # OpenAI API call to evaluate the offer
     try:
         prompt = (
-            f"The last offer was ${last_offer if last_offer else price}. "
+            f"The last offer was ${last_offer}. "
             f"The user has now offered '{user_offer}'. Evaluate this offer and respond with a new offer or a rejection. "
             "If providing a new offer, start your response with 'The new offer is'."
         )
@@ -95,32 +92,32 @@ def evaluate_offer():
         # Parse the AI's response to extract the new offer
         if "new offer" in ai_response.lower():
             try:
+                print("HERE!!!")
                 new_price = int(''.join(filter(str.isdigit, ai_response)))
-                if new_price > price:  # Ensure the new offer is higher
-                    price = new_price
-                    last_offer = price  # Update last_offer
+                if new_price > last_offer:  # Ensure the new offer is higher
+                    last_offer = new_price  # Update last_offer with the valid new offer
             except ValueError:
                 return jsonify({
                     "status": "error",
                     "message": "Failed to extract a valid offer from the AI response.",
-                    "price": price,
+                    "price": last_offer,
                     "attempts": attempts
                 })
 
         return jsonify({
             "status": "success",
             "message": ai_response,
-            "price": price,
+            "price": last_offer,
             "attempts": attempts
         })
 
     except Exception as e:
-        print(e)
+
         return jsonify({
             "status": "error",
             "message": "An error occurred while processing your offer. Please try again.",
             "error": str(e),
-            "price": price,
+            "price": last_offer,
             "attempts": attempts
         })
 
@@ -130,7 +127,7 @@ def reset_game():
     global price, attempts, last_offer
     price = initial_price
     attempts = 5
-    last_offer = None
+    last_offer = initial_price
     return jsonify({
         "status": "success",
         "message": "Game has been reset.",
@@ -139,4 +136,4 @@ def reset_game():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
